@@ -40,3 +40,5 @@ app.use('/api/v1/locations', locationRoutes);
 app.listen(PORT , function() {
     console.log('App is running! at port', PORT);
   });
+
+  module.exports = app;
