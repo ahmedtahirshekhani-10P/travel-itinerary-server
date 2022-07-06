@@ -4,9 +4,8 @@ const config = require('../config');
 
 
 exports.getTrips = async (req, res)=>{
-    req.session.username = "ahmedtahirshekhani"
-    req.session.save()
-    const resp = await Trips.find({username:req.session.username});
+    const user = res.locals.user;
+    const resp = await Trips.find({username:user.username});
     if (resp) {
   
       res.send({
@@ -24,14 +23,10 @@ exports.getTrips = async (req, res)=>{
 
   exports.getSingleTripDetails = async (req, res) => {
     const tripName = req.params.tripname
-    req.session.username = "ahmedtahirshekhani"
-    req.session.save()
-  
-  
-    const singleTripDetails = await SingleTrip.findOne({username:req.session.username, tripname:tripName});
-    const singleTripMetaData = await Trips.find({username:req.session.username});
+    user = res.locals.user
+    const singleTripDetails = await SingleTrip.findOne({username:user.username, tripname:tripName});
+    const singleTripMetaData = await Trips.find({username:user.username});
     let obj = {}
-    //console.log(singleTripMetaData)
     singleTripMetaData.map(val=>{
       if(val.name == tripName){
   
@@ -54,25 +49,16 @@ exports.getTrips = async (req, res)=>{
       });
     }
   
-    // console.log(singleTripDetails)
   }
 
 
 exports.addNewTrip = async (req, res)=>{
   const parts  = new Date().toLocaleDateString("en-GB")
   req.body.createdOn = parts
-  //console.log(req.body)
 
-  req.session.username = "ahmedtahirshekhani"
-  req.session.save()
-  //const mytrips = await Trips.findOne({username:req.session.username});
-
-  req.body.username =req.session.username
+  req.body.username =res.locals.user.username
   const trip = new Trips(req.body);
   await trip.save();
-  // console.log(mytrips)
-  //await Trips.updateOne({username:req.session.username}, {$set:{tripdata: mytrips.tripdata}})
-  // console.log(data)
 
   const tripDays = []
   for (let index = 0; index < req.body.days; index++) {
@@ -84,7 +70,7 @@ exports.addNewTrip = async (req, res)=>{
   }
 
   const singleTripDetails = new SingleTrip({
-    username:req.session.username,
+    username:res.locals.user.username,
     tripname:req.body.name,
     tripdata:tripDays
   });
@@ -99,9 +85,10 @@ exports.addNewTrip = async (req, res)=>{
 exports.deleteTrip = async (req, res)=>{
 
   const tripToDel = req.params.tripname
+  const user = res.locals.user
   
-  const tripDelSuccess = await SingleTrip.deleteOne({username:req.session.username, tripname:tripToDel});
-  const tripMainDet = await Trips.deleteOne({username:req.session.username, name:req.params.tripname})
+  const tripDelSuccess = await SingleTrip.deleteOne({username:user.username, tripname:tripToDel});
+  await Trips.deleteOne({username:user.username, name:req.params.tripname})
   //console.log(tripMainDet)
   
   if(tripDelSuccess){
@@ -116,9 +103,8 @@ exports.deleteTrip = async (req, res)=>{
 exports.updateTripData = async (req, res)=>{
   const tripToUpd = req.params.tripname
   const {data} = req.body
-  // const singleTripDetails = await SingleTrip.findOne({username:req.session.username, tripname:name});
-  await SingleTrip.updateOne({username:req.session.username, tripname:tripToUpd}, {$set:{tripdata: data}})
-  //console.log(data)
+  const user = res.locals.user
+  await SingleTrip.updateOne({username:user.username, tripname:tripToUpd}, {$set:{tripdata: data}})
   res.send({
     success: true
   })
