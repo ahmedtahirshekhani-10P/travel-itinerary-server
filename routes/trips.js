@@ -8,4 +8,7 @@ router.post("", TripCtrl.addNewTrip);
 router.get("/:tripname", TripCtrl.getSingleTripDetails);
 router.put("/:tripname", TripCtrl.updateTripData);
 router.delete("/:tripname", TripCtrl.deleteTrip);
+
+//add friend
+router.patch("/:tripname", TripCtrl.addFriend);
 module.exports = router;
