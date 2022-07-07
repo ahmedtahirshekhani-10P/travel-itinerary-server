@@ -2,13 +2,15 @@ const express = require("express");
 const router = express.Router();
 
 const TripCtrl = require("../controllers/trip");
+const UserCtrl = require("../controllers/user");
 
-router.get("", TripCtrl.getTrips);
-router.post("", TripCtrl.addNewTrip);
-router.get("/:tripname", TripCtrl.getSingleTripDetails);
-router.put("/:tripname", TripCtrl.updateTripData);
-router.delete("/:tripname", TripCtrl.deleteTrip);
+router.get("/",UserCtrl.authMiddleware, TripCtrl.getTrips);
+router.post("/", UserCtrl.authMiddleware, TripCtrl.addNewTrip);
+router.get("/:tripname",UserCtrl.authMiddleware, TripCtrl.getSingleTripDetails);
+router.put("/:tripname",UserCtrl.authMiddleware, TripCtrl.updateTripData);
+router.delete("/:tripname",UserCtrl.authMiddleware, TripCtrl.deleteTrip);
 
 //add friend
-router.patch("/:tripname", TripCtrl.addFriend);
+router.patch("/:tripname",UserCtrl.authMiddleware, TripCtrl.addFriend);
+
 module.exports = router;

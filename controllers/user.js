@@ -1,44 +1,56 @@
 const User = require('../models/users');
 // const { normalizeErrors } = require('../helpers/mongoose');
-// const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const config = require('../config');
 
-
-exports.registerUser= async (req, res) => {
-    // console.log(req.body)
+exports.registerUser = (req, res) => {
     const { name, email, username, password } = req.body;
-    const resp = await User.findOne({ username });
-    if (resp) {
-      res.send({
-        success: false,
-        message: "Username already there",
-      });
-      return;
-    }
-    const user = new User({
+    User.findOne({username}, function(err, existingUser) {
+      if (err) {
+        return res.status(422).send({success: false, message: err.errors});
+      }
+  
+      if (existingUser) {
+        return res.status(422).send({ success: false,
+          message: "Username already there"});
+      }
+
+      const user = new User({
+        name,
+        email,
         username,
-        password,
+        password
       });
-      await user.save();
-      req.session.username = username;
-      req.session.save();
-      res.send({
-        success: true,
-        message: "Registered Successful",
+      user.save(function(err) {
+        if (err) {
+          return res.status(422).send({success: false, message: err.errors});
+        }
+  
+        return res.json({success: true,
+          message: "Registered Successful"});
       });
+
+
+
+    })
+    
+        
+     
     }
 
 exports.loginUser = async (req, res) => {
     const { username, password } = req.body;
     const resp = await User.findOne({ username, password });
-    console.log(resp);
-  
+   
     if (resp) {
-      req.session.username = username;
-      req.session.save();
+      const token = jwt.sign({
+        userId: resp._id,
+        username: resp.username
+      }, config.SECRET, { expiresIn: '1h'});
+      
       res.send({
         success: true,
-        message: "Logged in Successful",
+        message: token,
       });
     } else {
       res.send({
@@ -62,4 +74,61 @@ exports.getUsers = async (req, res) => {
         message: "Api failed! Error",
       });
     }
+  }
+
+  exports.authMiddleware = function(req, res, next) {
+    const token = req.headers.authorization;
+      if (token) {
+        let user = {}
+        try{
+           user = parseToken(token);
+        }
+        catch(e){
+          return res.status(422).send({errors: e});
+
+        }
+        
+        User.findById(user.userId, function(err, {_id, name, email, username}) {
+          if (err) {
+            return res.status(422).send({errors: err.errors});
+          }
+    
+          if (user) {
+            res.locals.user = {_id, name, email, username};
+            // console.log(res.locals.user)
+            next();
+          } else {
+            return notAuthorized(res);
+          }
+        })
+      } else {
+        return notAuthorized(res);
+      }
+    }
+    
+    function parseToken(token) {
+      // console.log("working")
+      return jwt.verify(token.split(' ')[1], config.SECRET);
+    }
+    
+    function notAuthorized(res) {
+      return res.status(401).send({errors: [{title: 'Not authorized!', detail: 'You need to login to get access!'}]});
+    }
+    
+  
+
+  exports.getSingleUser = async (req,res) => {
+    const username = req.params.username
+    const resp = await User.findOne({ username });
+    if(resp){
+      res.send({
+        success:true,
+        message:resp
+      })
+    }
+    
+  }
+
+  exports.isLoggedIn = (req, res)=>{
+    console.log("check")
   }
