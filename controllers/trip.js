@@ -1,5 +1,7 @@
 const Trips = require("../models/trips");
 const SingleTrip = require("../models/singletrip");
+const FriendTrips = require('../models/friendTrips');
+
 const config = require('../config');
 
 
@@ -24,8 +26,10 @@ exports.getTrips = async (req, res)=>{
   exports.getSingleTripDetails = async (req, res) => {
     const tripName = req.params.tripname
     user = res.locals.user
+    //console.log(user.name)
     const singleTripDetails = await SingleTrip.findOne({username:user.username, tripname:tripName});
     const singleTripMetaData = await Trips.findOne({username:user.username, name:tripName});
+    //console.log(singleTripDetails, singleTripMetaData)
     let obj = {}
     obj.metaData = singleTripMetaData
     obj.singleTripDetails = singleTripDetails
@@ -107,14 +111,50 @@ exports.updateTripData = async (req, res)=>{
 
 }
 
- //checking for add friend
+ //add friend
  exports.addFriend = async (req, res)=>{
-  console.log(req.body.friends)
-  const tripToUpd = req.params.tripname
-  const user = res.locals.user
-  await Trips.updateOne({username:user.username, name: tripToUpd}, {$set:{friends: req.body.friends}});
-  res.send({
+  //console.log(req.body.friends)
+  //console.log("Here")
+  const friendAdded = req.body.friendToAdd
+  const tripToUpd = req.params.tripid
+
+  //console.log(tripToUpd, friendAdded)
+
+   await Trips.updateOne({_id: tripToUpd}, {$push:{friends: friendAdded}});
+
+  // Add that trip id to friend Trip table
+   await FriendTrips.updateOne({username: friendAdded}, {$push: {"tripIDs": tripToUpd}});
+    res.send({
     success: true
   })
 }
 
+// Remove Friend
+exports.rmvFriend = async (req, res)=>{
+  //console.log(req.body.friends)
+
+  const friendDel = req.body.friendToDel
+  const tripToUpd = req.params.tripid
+  await Trips.updateOne({_id: tripToUpd}, {$pull:{friends: friendDel}});
+  await FriendTrips.updateOne({username: friendDel}, {$pull: {"tripIDs": tripToUpd}});
+ 
+  res.send({
+    success: true
+  })
+
+  
+}
+
+exports.getTripsAsFrnd = (req, res) => {
+  //console.log("Here")
+  const user = res.locals.user;
+  
+  Trips.find({friends: user.username}, function(err, resp){
+    if (err) {
+      return res.status(422).send({errors: err.errors});
+    }else{
+      res.status(200).send(resp)
+    }
+  })
+  
+}

@@ -5,7 +5,7 @@ const friendTripsSchema = new mongoose.Schema({
     
 })
 
-const friendTrips = mongoose.model('friendTrips', UserSchema)
-module.exports=User
+const friendTrips = mongoose.model('friendTrips', friendTripsSchema)
+module.exports=friendTrips
 
 

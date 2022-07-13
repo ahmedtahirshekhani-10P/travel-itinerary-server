@@ -1,4 +1,5 @@
 const User = require('../models/users');
+const FriendTrips = require('../models/friendTrips');
 // const { normalizeErrors } = require('../helpers/mongoose');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
@@ -15,16 +16,26 @@ exports.registerUser = (req, res) => {
           message: "Username already there"});
       }
 
+      
+
+      
+
       const user = new User({
         name,
         email,
         username,
         password
       });
-      user.save(function(err) {
+      user.save(async function(err) {
         if (err) {
           return res.status(422).send({success: false, message: err.errors});
         }
+
+        const friendTripList = new FriendTrips({
+          username,
+          tripIDs: []
+        })
+        await friendTripList.save()
   
         return res.json({success: true,
           message: "Registered Successful"});
@@ -77,7 +88,9 @@ exports.getUsers = async (req, res) => {
   }
 
   exports.authMiddleware = function(req, res, next) {
+    // console.log("Here1")
     const token = req.headers.authorization;
+    // console.log(token)
       if (token) {
         let user = {}
         try{
