@@ -97,7 +97,7 @@ exports.deleteTrip = async (req, res)=>{
 exports.updateTripData = async (req, res)=>{
   const tripToUpd = req.params.tripid
   const {data} = req.body
-  await SingleTrip.updateOne({_id:tripToUpd}, {$set:{tripdata: data}})
+  await SingleTrip.updateOne({tId:tripToUpd}, {$set:{tripdata: data}})
   res.send({
     success: true
   })
