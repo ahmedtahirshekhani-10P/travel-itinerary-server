@@ -10,25 +10,19 @@ exports.getTrips = async (req, res)=>{
     const resp = await Trips.find({username:user.username});
     if (resp) {
   
-      res.send({
-        success: true,
-        data: resp
-      });
+      res.status(200).send(resp);
     } else {
-      res.send({
-        success: false,
-        error: "Api failed! Error",
-      });
+      return res.status(404).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
     }
   }
 
 
   exports.getSingleTripDetails = async (req, res) => {
-    const tripName = req.params.tripname
+    const tripId = req.params.tripid
     user = res.locals.user
     //console.log(user.name)
-    const singleTripDetails = await SingleTrip.findOne({username:user.username, tripname:tripName});
-    const singleTripMetaData = await Trips.findOne({username:user.username, name:tripName});
+    const singleTripDetails = await SingleTrip.findOne({tId: tripId});
+    const singleTripMetaData = await Trips.findOne({_id: tripId});
     //console.log(singleTripDetails, singleTripMetaData)
     let obj = {}
     obj.metaData = singleTripMetaData
@@ -58,8 +52,7 @@ exports.addNewTrip = async (req, res)=>{
 
   req.body.username =res.locals.user.username
   const trip = new Trips(req.body);
-  await trip.save();
-
+  const addedTrip = await trip.save();
   const tripDays = []
   for (let index = 0; index < req.body.days; index++) {
     tripDays.push([
@@ -72,6 +65,7 @@ exports.addNewTrip = async (req, res)=>{
   const singleTripDetails = new SingleTrip({
     username:res.locals.user.username,
     tripname:req.body.name,
+    tId: addedTrip._id,
     tripdata:tripDays
   });
   await singleTripDetails.save();
@@ -84,11 +78,11 @@ exports.addNewTrip = async (req, res)=>{
 
 exports.deleteTrip = async (req, res)=>{
 
-  const tripToDel = req.params.tripname
-  const user = res.locals.user
+  const tripToDel = req.params.tripid
+
   
-  const tripDelSuccess = await SingleTrip.deleteOne({username:user.username, tripname:tripToDel});
-  await Trips.deleteOne({username:user.username, name:req.params.tripname})
+  const tripDelSuccess = await SingleTrip.deleteOne({tId:tripToDel});
+  await Trips.deleteOne({_id:tripToDel})
   //console.log(tripMainDet)
   
   if(tripDelSuccess){
@@ -101,10 +95,9 @@ exports.deleteTrip = async (req, res)=>{
 }
 
 exports.updateTripData = async (req, res)=>{
-  const tripToUpd = req.params.tripname
+  const tripToUpd = req.params.tripid
   const {data} = req.body
-  const user = res.locals.user
-  await SingleTrip.updateOne({username:user.username, tripname:tripToUpd}, {$set:{tripdata: data}})
+  await SingleTrip.updateOne({_id:tripToUpd}, {$set:{tripdata: data}})
   res.send({
     success: true
   })
