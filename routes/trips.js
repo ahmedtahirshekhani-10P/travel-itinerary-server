@@ -14,7 +14,7 @@ router.delete("/:tripid",UserCtrl.authMiddleware, TripCtrl.deleteTrip);
 
 //add friend
 router.patch("/friends/:tripid",UserCtrl.authMiddleware, TripCtrl.addFriend);
-router.delete("/friends/:tripid",UserCtrl.authMiddleware, TripCtrl.rmvFriend);
+router.post("/friends/:tripid",UserCtrl.authMiddleware, TripCtrl.rmvFriend);
 
 
 module.exports = router;
