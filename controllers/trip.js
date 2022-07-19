@@ -61,9 +61,7 @@ exports.addNewTrip = async (req, res)=>{
   });
   const saveTripDet = await singleTripDetails.save();
   if (saveTripDet) {
-    res.status(200).send({
-      success: true
-    });
+    return res.status(200);
   } else {
     return res.status(422).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
   }
@@ -83,9 +81,7 @@ exports.deleteTrip = async (req, res)=>{
 
   
   if(tripDelSuccess && deleteTrip){
-    res.status(200).send({
-      success:true
-    })
+    return res.status(200)
   }else {
     return res.status(422).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
   }
@@ -99,9 +95,7 @@ exports.updateTripData = async (req, res)=>{
   const updateSingleTrip = await SingleTrip.updateOne({tId:tripToUpd}, {$set:{tripdata: data}})
   
   if(updateSingleTrip){
-    res.status(200).send({
-      success:true
-    })
+    return res.status(200)
   }else {
     return res.status(422).send({errors: [{title: 'Error!', detail: 'API failed to work'}]});
   }
@@ -119,9 +113,7 @@ exports.updateTripData = async (req, res)=>{
   // Add that trip id to friend Trip table
    const FriendTripUpdate = await FriendTrips.updateOne({username: friendAdded}, {$push: {"tripIDs": tripToUpd}});
    if(updateOne && FriendTripUpdate){
-    res.status(200).send({
-      success:true
-    })
+    return res.status(200)
   }else {
     return res.status(422).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
   }
@@ -139,9 +131,7 @@ exports.rmvFriend = async (req, res)=>{
  
   
   if(updateOne && FriendTripUpd){
-    res.status(200).send({
-      success:true
-    })
+    return res.status(200)  
   }else {
     return res.status(422).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
   }
