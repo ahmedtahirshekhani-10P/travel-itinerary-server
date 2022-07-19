@@ -82,7 +82,7 @@ exports.deleteTrip = async (req, res)=>{
   
 
   
-  if(tripDelSuccess){
+  if(tripDelSuccess && deleteTrip){
     res.status(200).send({
       success:true
     })
@@ -103,7 +103,7 @@ exports.updateTripData = async (req, res)=>{
       success:true
     })
   }else {
-    return res.status(422).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
+    return res.status(422).send({errors: [{title: 'Error!', detail: 'API failed to work'}]});
   }
  
 
