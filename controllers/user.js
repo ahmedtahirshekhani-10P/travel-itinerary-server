@@ -1,7 +1,9 @@
+const mongoose = require('mongoose');
 const User = require('../models/users');
 const FriendTrips = require('../models/friendTrips');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
+const ObjectId = mongoose.Types.ObjectId;
 
 exports.registerUser = (req, res) => {
     const { name, email, username, password } = req.body;
@@ -14,10 +16,6 @@ exports.registerUser = (req, res) => {
         return res.status(422).send({ success: false,
           message: "Username already there"});
       }
-
-      
-
-      
 
       const user = new User({
         name,
@@ -36,8 +34,8 @@ exports.registerUser = (req, res) => {
         })
         const friendList = await friendTripList.save()
         if(friendList){
-          return res.status(200).send(
-            "Registered Successful");
+          return res.status(200).send({
+            message: "Registered Successful"});
         }else{
           return res.status(422).send({errors: [{title: 'Error!', detail: 'API failed to work'}]});
         }
@@ -63,7 +61,8 @@ exports.loginUser = async (req, res) => {
         username: resp.username
       }, config.SECRET, { expiresIn: '1h'});
       
-      return res.status(200).send(token)
+      return res.status(200).send({
+        message: token})
     } else {
       return res.status(422).send({errors: [{title: 'Error!', detail: 'API failed to work'}]});
 
@@ -82,9 +81,7 @@ exports.getUsers = async (req, res) => {
   }
 
   exports.authMiddleware = function(req, res, next) {
-    // console.log("Here1")
     const token = req.headers.authorization;
-    // console.log(token)
       if (token) {
         let user = {}
         try{
@@ -95,14 +92,13 @@ exports.getUsers = async (req, res) => {
 
         }
         
-        User.findById(user.userId, function(err, {_id, name, email, username}) {
+        User.findOne({_id: ObjectId(user.userId)}, function(err, {_id, name, email, username}) {
           if (err) {
             return res.status(422).send({errors: err.errors});
           }
     
           if (user) {
             res.locals.user = {_id, name, email, username};
-            // console.log(res.locals.user)
             next();
           } else {
             return notAuthorized(res);
@@ -114,7 +110,6 @@ exports.getUsers = async (req, res) => {
     }
     
     function parseToken(token) {
-      // console.log("working")
       return jwt.verify(token.split(' ')[1], config.SECRET);
     }
     
@@ -135,4 +130,3 @@ exports.getUsers = async (req, res) => {
     }
     
   }
-

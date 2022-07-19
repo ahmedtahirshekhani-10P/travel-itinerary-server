@@ -11,5 +11,5 @@ const tripsSchema = new mongoose.Schema({
     friends: Array
 })
 
-const trips= mongoose.model('my_trips', tripsSchema)
+const trips= mongoose.model('trips', tripsSchema)
 module.exports=trips
