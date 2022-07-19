@@ -12,7 +12,7 @@ exports.getTrips = async (req, res)=>{
   
       res.status(200).send(resp);
     } else {
-      return res.status(404).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
+      return res.status(422).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
     }
   }
 
@@ -20,28 +20,19 @@ exports.getTrips = async (req, res)=>{
   exports.getSingleTripDetails = async (req, res) => {
     const tripId = req.params.tripid
     user = res.locals.user
-    //console.log(user.name)
     const singleTripDetails = await SingleTrip.findOne({tId: tripId});
     const singleTripMetaData = await Trips.findOne({_id: tripId});
-    //console.log(singleTripDetails, singleTripMetaData)
-    let obj = {}
-    obj.metaData = singleTripMetaData
-    obj.singleTripDetails = singleTripDetails
-
-
-    // console.log(singleTripDetails)
-    if (singleTripDetails) {
-  
-      res.send({
-        success: true,
-        message: obj
-      });
+    if (singleTripDetails && singleTripMetaData) {
+      let obj = {}
+      obj.metaData = singleTripMetaData
+      obj.singleTripDetails = singleTripDetails
+      res.status(200).send(obj);
     } else {
-      res.send({
-        success: false,
-        message: "Api failed! Error",
-      });
+      return res.status(422).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
     }
+    
+   
+    
   
   }
 
@@ -68,11 +59,16 @@ exports.addNewTrip = async (req, res)=>{
     tId: addedTrip._id,
     tripdata:tripDays
   });
-  await singleTripDetails.save();
+  const saveTripDet = await singleTripDetails.save();
+  if (saveTripDet) {
+    res.status(200).send({
+      success: true
+    });
+  } else {
+    return res.status(422).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
+  }
 
-  res.send({
-    success: true
-  })
+  
 
 }
 
@@ -82,13 +78,16 @@ exports.deleteTrip = async (req, res)=>{
 
   
   const tripDelSuccess = await SingleTrip.deleteOne({tId:tripToDel});
-  await Trips.deleteOne({_id:tripToDel})
-  //console.log(tripMainDet)
+  const deleteTrip = await Trips.deleteOne({_id:tripToDel})
+  
+
   
   if(tripDelSuccess){
-    res.send({
+    res.status(200).send({
       success:true
     })
+  }else {
+    return res.status(422).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
   }
 
 
@@ -97,49 +96,60 @@ exports.deleteTrip = async (req, res)=>{
 exports.updateTripData = async (req, res)=>{
   const tripToUpd = req.params.tripid
   const {data} = req.body
-  await SingleTrip.updateOne({_id:tripToUpd}, {$set:{tripdata: data}})
-  res.send({
-    success: true
-  })
+  const updateSingleTrip = await SingleTrip.updateOne({tId:tripToUpd}, {$set:{tripdata: data}})
+  
+  if(updateSingleTrip){
+    res.status(200).send({
+      success:true
+    })
+  }else {
+    return res.status(422).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
+  }
+ 
 
 }
 
  //add friend
  exports.addFriend = async (req, res)=>{
-  //console.log(req.body.friends)
-  //console.log("Here")
   const friendAdded = req.body.friendToAdd
   const tripToUpd = req.params.tripid
 
-  //console.log(tripToUpd, friendAdded)
-
-   await Trips.updateOne({_id: tripToUpd}, {$push:{friends: friendAdded}});
+   const updateOne = await Trips.updateOne({_id: tripToUpd}, {$push:{friends: friendAdded}});
 
   // Add that trip id to friend Trip table
-   await FriendTrips.updateOne({username: friendAdded}, {$push: {"tripIDs": tripToUpd}});
-    res.send({
-    success: true
-  })
+   const FriendTripUpdate = await FriendTrips.updateOne({username: friendAdded}, {$push: {"tripIDs": tripToUpd}});
+   if(updateOne && FriendTripUpdate){
+    res.status(200).send({
+      success:true
+    })
+  }else {
+    return res.status(422).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
+  }
+   
+  
 }
 
 // Remove Friend
 exports.rmvFriend = async (req, res)=>{
-  //console.log(req.body.friends)
 
   const friendDel = req.body.friendToDel
   const tripToUpd = req.params.tripid
-  await Trips.updateOne({_id: tripToUpd}, {$pull:{friends: friendDel}});
-  await FriendTrips.updateOne({username: friendDel}, {$pull: {"tripIDs": tripToUpd}});
+  const updateOne = await Trips.updateOne({_id: tripToUpd}, {$pull:{friends: friendDel}});
+  const FriendTripUpd = await FriendTrips.updateOne({username: friendDel}, {$pull: {"tripIDs": tripToUpd}});
  
-  res.send({
-    success: true
-  })
+  
+  if(updateOne && FriendTripUpd){
+    res.status(200).send({
+      success:true
+    })
+  }else {
+    return res.status(422).send({errors: [{title: 'Fetch Error!', detail: 'API failed to fetch the data'}]});
+  }
 
   
 }
 
 exports.getTripsAsFrnd = (req, res) => {
-  //console.log("Here")
   const user = res.locals.user;
   
   Trips.find({friends: user.username}, function(err, resp){

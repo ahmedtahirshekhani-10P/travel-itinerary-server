@@ -1,6 +1,5 @@
 const User = require('../models/users');
 const FriendTrips = require('../models/friendTrips');
-// const { normalizeErrors } = require('../helpers/mongoose');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 
@@ -35,10 +34,15 @@ exports.registerUser = (req, res) => {
           username,
           tripIDs: []
         })
-        await friendTripList.save()
+        const friendList = await friendTripList.save()
+        if(friendList){
+          return res.status(200).send(
+            "Registered Successful");
+        }else{
+          return res.status(422).send({errors: [{title: 'Error!', detail: 'API failed to work'}]});
+        }
   
-        return res.json({success: true,
-          message: "Registered Successful"});
+       
       });
 
 
@@ -59,31 +63,21 @@ exports.loginUser = async (req, res) => {
         username: resp.username
       }, config.SECRET, { expiresIn: '1h'});
       
-      res.send({
-        success: true,
-        message: token,
-      });
+      return res.status(200).send(token)
     } else {
-      res.send({
-        success: false,
-        message: "Login attempt failed!",
-      });
+      return res.status(422).send({errors: [{title: 'Error!', detail: 'API failed to work'}]});
+
     }
   }
 
 exports.getUsers = async (req, res) => {
     const resp = await User.find({}, {"_id": 0, "username": 1, "email":2});
-    // console.log(resp)
     if (resp) {
-      res.send({
-        success: true,
-        message: resp,
-      });
+      res.status(200).send(resp)
+
     } else {
-      res.send({
-        success: false,
-        message: "Api failed! Error",
-      });
+      return res.status(422).send({errors: [{title: 'Error!', detail: 'API failed to work'}]});
+
     }
   }
 
@@ -134,14 +128,11 @@ exports.getUsers = async (req, res) => {
     const username = req.params.username
     const resp = await User.findOne({ username });
     if(resp){
-      res.send({
-        success:true,
-        message:resp
-      })
+      res.status(200).send(resp)
+    }else{
+      return res.status(422).send({errors: [{title: 'Error!', detail: 'API failed to work'}]});
+
     }
     
   }
 
-  exports.isLoggedIn = (req, res)=>{
-    console.log("check")
-  }

@@ -5,35 +5,19 @@ const config = require('../config');
 exports.getSubLoc = async (req, res) => {
     const resp = await Locations.findOne({name:req.params.mainlocationname});
     if (resp) {
-  
-      res.send({
-        success: true,
-        message: resp.subPlaces
-      });
+      return res.status(200).send(resp.subPlaces)
     } else {
-      res.send({
-        success: false,
-        message: "Api failed! Error",
-      });
+      return res.status(422).send({errors: [{title: 'Error!', detail: 'API failed to work'}]});
     }
   
-    // console.log(resp)
   }
 
 exports.getMainLoc = async (req, res) => {
     const resp = await Locations.find();
     if (resp) {
-      // resp.map((value) => {
-      //   locationArray.push(value.name);
-      // });
-      res.send({
-        success: true,
-        message: resp,
-      });
+    
+     return res.status(200).send(resp)
     } else {
-      res.send({
-        success: false,
-        message: "Api failed! Error",
-      });
+      return res.status(422).send({errors: [{title: 'Error!', detail: 'API failed to work'}]});
     }
   }
